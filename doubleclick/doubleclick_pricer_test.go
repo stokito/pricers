@@ -8,10 +8,6 @@ import (
 	"github.com/benjaminch/pricers/helpers"
 )
 
-func buildNewDoubleClickPricer(encryptionKey string, integrityKey string, isBase64Keys bool, keyDecodingMode helpers.KeyDecodingMode, scaleFactor float64, isDebugMode bool) (*DoubleClickPricer, error) {
-	return NewDoubleClickPricer(encryptionKey, integrityKey, isBase64Keys, keyDecodingMode, scaleFactor, isDebugMode)
-}
-
 // Create a pricer with:
 // - HEX keys
 // - Price scale factor as micro
@@ -23,14 +19,13 @@ func buildPricer() (*DoubleClickPricer, error) {
 func buildPricerWithScale(scaleFactor float64) (*DoubleClickPricer, error) {
 	var pricer *DoubleClickPricer
 	var err error
-	pricer, err = buildNewDoubleClickPricer(
+	pricer, err = NewDoubleClickPricer(
 		"652f83ada0545157a1b7fb0c0e09f59e7337332fe7abd4eb10449b8ee6c39135",
 		"bd0a3dfb82ad95c5e63e159a62f73c6aca98ba2495322194759d512d77eb2bb5",
-		false, // Keys are not base64
+		false,
 		helpers.Hexa,
 		scaleFactor,
-		false,
-	)
+		false)
 	return pricer, err
 }
 
@@ -61,14 +56,13 @@ func TestDecryptGoogleOfficialExamples(t *testing.T) {
 	// Setup:
 	var pricer *DoubleClickPricer
 	var err error
-	pricer, err = buildNewDoubleClickPricer(
+	pricer, err = NewDoubleClickPricer(
 		"ZS-DraBUUVeht_sMDgn1nnM3My_nq9TrEESbjubDkTU",
 		"vQo9-4KtlcXmPhWaYvc8asqYuiSVMiGUdZ1RLXfrK7U",
-		true, // Keys are base64
+		true,
 		helpers.Utf8,
 		1000000,
-		false,
-	)
+		false)
 
 	assert.Nil(t, err, "Error creating new Pricer : ", err)
 
@@ -129,14 +123,13 @@ func TestDecryptWithUtf8Keys(t *testing.T) {
 	// Setup:
 	var pricer *DoubleClickPricer
 	var err error
-	pricer, err = buildNewDoubleClickPricer(
+	pricer, err = NewDoubleClickPricer(
 		"6356770B3C111C07F778AFD69F16643E9110090FD4C479D91181EED2523788F1",
 		"3588BF6D387E8AEAD4EEC66798255369AF47BFD48B056E8934CEFEF3609C469E",
-		false, // Keys are not base64
+		false,
 		helpers.Utf8,
 		1000000,
-		false,
-	)
+		false)
 
 	assert.Nil(t, err, "Error creating new Pricer : ", err)
 
@@ -332,14 +325,13 @@ func TestEncryptDecryptWithUtf8Keys(t *testing.T) {
 	// Setup:
 	var pricer *DoubleClickPricer
 	var err error
-	pricer, err = buildNewDoubleClickPricer(
+	pricer, err = NewDoubleClickPricer(
 		"6356770B3C111C07F778AFD69F16643E9110090FD4C479D91181EED2523788F1",
 		"3588BF6D387E8AEAD4EEC66798255369AF47BFD48B056E8934CEFEF3609C469E",
-		false, // Keys are not base64
+		false,
 		helpers.Utf8,
 		1000000,
-		false,
-	)
+		false)
 
 	assert.Nil(t, err, "Error creating new Pricer : ", err)
 
