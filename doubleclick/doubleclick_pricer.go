@@ -129,19 +129,29 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 
 // Decrypt decrypts an encrypted price.
 func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
+	buf := make([]byte, 28)
+	priceInMicro, err := dc.DecryptRaw(encryptedPrice, buf)
+	price := float64(priceInMicro) / dc.scaleFactor
+	return price, err
+}
+
+// DecryptRaw decrypts an encrypted price.
+// It returns the price as integer in micros without applying a scaleFactor
+// You must pass a buffer for decoder so that can reused again to avoid allocation
+func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice string, buf []byte) (uint64, error) {
 	var err error
-	var errPrice float64
 
 	// Decode base64 url
 	// Just to be safe remove padding if it was added by mistake
 	encryptedPrice = strings.TrimRight(encryptedPrice, "=")
 	if len(encryptedPrice) != 38 {
-		return errPrice, ErrWrongSize
+		return 0, ErrWrongSize
 	}
-	decoded, err := base64.RawURLEncoding.DecodeString(encryptedPrice)
+	_, err = base64.RawURLEncoding.Decode(buf, []byte(encryptedPrice))
 	if err != nil {
-		return errPrice, err
+		return 0, err
 	}
+	decoded := buf
 
 	if dc.isDebugMode {
 		fmt.Println("Encrypted price : ", encryptedPrice)
@@ -180,9 +190,9 @@ func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 
 	// success = (conf_sig == sig)
 	if !bytes.Equal(confirmationSignature, signature) {
-		return errPrice, ErrWrongSignature
+		return 0, ErrWrongSignature
 	}
-	price := float64(binary.BigEndian.Uint64(priceMicro[:])) / dc.scaleFactor
+	priceInMicros := binary.BigEndian.Uint64(priceMicro[:])
 
-	return price, nil
+	return priceInMicros, nil
 }
