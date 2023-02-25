@@ -94,32 +94,16 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 
 	// Create Initialization Vector from seed
 	iv = md5.Sum([]byte(seed))
-	if dc.isDebugMode {
-		fmt.Println("Seed : ", seed)
-		fmt.Println("Initialization vector : ", iv)
-	}
 
 	//pad = hmac(e_key, iv), first 8 bytes
 	pad := helpers.HmacSum(dc.encryptionKey, iv[:], nil)[:8]
-	if dc.isDebugMode {
-		fmt.Println("// pad = hmac(e_key, iv), first 8 bytes")
-		fmt.Println("Pad : ", pad)
-	}
 
 	// signature = hmac(i_key, data || iv), first 4 bytes
 	signature = helpers.HmacSum(dc.integrityKey, data[:], iv[:])[:4]
-	if dc.isDebugMode {
-		fmt.Println("// signature = hmac(i_key, data || iv), first 4 bytes")
-		fmt.Println("Signature : ", signature)
-	}
 
 	// enc_data = pad <xor> data
 	for i := range data {
 		encoded[i] = pad[i] ^ data[i]
-	}
-	if dc.isDebugMode {
-		fmt.Println("// enc_data = pad <xor> data")
-		fmt.Println("Encoded price bytes : ", encoded)
 	}
 
 	// final_message = WebSafeBase64Encode( iv || enc_price || signature )
@@ -152,11 +136,6 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	}
 	decoded := buf
 
-	if dc.isDebugMode {
-		fmt.Println("Encrypted price : ", encryptedPrice)
-		fmt.Println("Base64 decoded price : ", decoded)
-	}
-
 	// Get elements
 	var (
 		iv         []byte
@@ -171,13 +150,6 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 
 	// pad = hmac(e_key, iv)
 	pad := helpers.HmacSum(dc.encryptionKey, iv, nil)[:8]
-
-	if dc.isDebugMode {
-		fmt.Println("IV : ", hex.EncodeToString(iv))
-		fmt.Println("Encoded price : ", hex.EncodeToString(p))
-		fmt.Println("Signature : ", hex.EncodeToString(signature))
-		fmt.Println("Pad : ", hex.EncodeToString(pad))
-	}
 
 	// priceMicro = p <xor> pad
 	for i := range p {
