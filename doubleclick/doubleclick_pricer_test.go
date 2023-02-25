@@ -456,3 +456,20 @@ func TestEncryptDecryptWithScaleFactor(t *testing.T) {
 		}
 	}
 }
+
+func TestDoubleClickPricer_DecryptRaw(t *testing.T) {
+	pricer, _ := buildPricer()
+
+	encryptedPrice := "anCGGFJApcfB6ZGc6mindhpTrYXHY4ONo7lXpg"
+	buf := make([]byte, 28)
+	encryptedPriceBytes := []byte(encryptedPrice) // don't inline
+	allocs := testing.AllocsPerRun(2, func() {
+		_, _ = pricer.DecryptRaw(encryptedPriceBytes, buf)
+	})
+	assert.Equal(t, float64(3), allocs)
+
+	allocs = testing.AllocsPerRun(2, func() {
+		_, _ = pricer.Decrypt(encryptedPrice)
+	})
+	assert.Equal(t, float64(5), allocs)
+}

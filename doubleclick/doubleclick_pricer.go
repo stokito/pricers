@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"strings"
 
 	"github.com/benjaminch/pricers/helpers"
 )
@@ -130,7 +129,7 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 // Decrypt decrypts an encrypted price.
 func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 	buf := make([]byte, 28)
-	priceInMicro, err := dc.DecryptRaw(encryptedPrice, buf)
+	priceInMicro, err := dc.DecryptRaw([]byte(encryptedPrice), buf)
 	price := float64(priceInMicro) / dc.scaleFactor
 	return price, err
 }
@@ -138,16 +137,16 @@ func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 // DecryptRaw decrypts an encrypted price.
 // It returns the price as integer in micros without applying a scaleFactor
 // You must pass a buffer for decoder so that can reused again to avoid allocation
-func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice string, buf []byte) (uint64, error) {
+func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint64, error) {
 	var err error
 
 	// Decode base64 url
 	// Just to be safe remove padding if it was added by mistake
-	encryptedPrice = strings.TrimRight(encryptedPrice, "=")
+	encryptedPrice = bytes.TrimRight(encryptedPrice, "=")
 	if len(encryptedPrice) != 38 {
 		return 0, ErrWrongSize
 	}
-	_, err = base64.RawURLEncoding.Decode(buf, []byte(encryptedPrice))
+	_, err = base64.RawURLEncoding.Decode(buf, encryptedPrice)
 	if err != nil {
 		return 0, err
 	}
