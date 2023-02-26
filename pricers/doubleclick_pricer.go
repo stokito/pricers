@@ -106,9 +106,8 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 
 // Decrypt decrypts an encrypted price.
 func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
-	buf := make([]byte, 28)
-	hmacBuf := make([]byte, 0, 28)
-	priceInMicro, err := dc.DecryptRaw([]byte(encryptedPrice), buf, hmacBuf)
+	buf := make([]byte, 56)
+	priceInMicro, err := dc.DecryptRaw([]byte(encryptedPrice), buf)
 	price := float64(priceInMicro) / dc.scaleFactor
 	return price, err
 }
@@ -116,7 +115,7 @@ func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 // DecryptRaw decrypts an encrypted price.
 // It returns the price as integer in micros without applying a scaleFactor
 // You must pass a buffer for decoder so that can reused again to avoid allocation
-func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf, hmacBuf []byte) (uint64, error) {
+func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint64, error) {
 	var err error
 
 	// Decode base64 url
@@ -129,7 +128,8 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf, hmacBuf []by
 	if err != nil {
 		return 0, err
 	}
-	decoded := buf
+	decoded := buf[:28]
+	hmacBuf := buf[28:]
 
 	// Get elements
 	iv := decoded[0:16]

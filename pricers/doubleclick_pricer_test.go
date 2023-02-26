@@ -456,7 +456,7 @@ func TestDecryptAlloc(t *testing.T) {
 	mallocs += memstats.Mallocs
 	allocBytes += memstats.Alloc
 
-	assert.Equal(t, uint64(4), mallocs)
+	assert.Equal(t, uint64(3), mallocs)
 	assert.Equal(t, uint64(128), allocBytes) //168
 }
 
@@ -471,11 +471,10 @@ func BenchmarkDecrypt(b *testing.B) {
 func BenchmarkDecryptRaw(b *testing.B) {
 	pricer := buildPricer()
 	encryptedPrice := "anCGGFJApcfB6ZGc6mindhpTrYXHY4ONo7lXpg"
-	buf := make([]byte, 28)
-	hmacBuf := make([]byte, 0, 28)
+	buf := make([]byte, 56)
 	encryptedPriceBytes := []byte(encryptedPrice) // don't inline
 	for i := 0; i < b.N; i++ {
-		_, _ = pricer.DecryptRaw(encryptedPriceBytes, buf, hmacBuf)
+		_, _ = pricer.DecryptRaw(encryptedPriceBytes, buf)
 	}
 }
 
@@ -485,16 +484,10 @@ func TestDoubleClickPricer_DecryptRaw(t *testing.T) {
 	pricer := buildPricer()
 
 	encryptedPrice := "anCGGFJApcfB6ZGc6mindhpTrYXHY4ONo7lXpg"
-	buf := make([]byte, 28)
-	hmacBuf := make([]byte, 0, 28)
+	buf := make([]byte, 56)
 	encryptedPriceBytes := []byte(encryptedPrice) // don't inline
-	allocs := testing.AllocsPerRun(2, func() {
-		_, _ = pricer.DecryptRaw(encryptedPriceBytes, buf, hmacBuf)
+	allocs := testing.AllocsPerRun(1, func() {
+		_, _ = pricer.DecryptRaw(encryptedPriceBytes, buf)
 	})
 	assert.Equal(t, float64(1), allocs)
-
-	allocs = testing.AllocsPerRun(2, func() {
-		_, _ = pricer.Decrypt(encryptedPrice)
-	})
-	assert.Equal(t, float64(4), allocs)
 }

@@ -85,7 +85,7 @@ func HmacSum(hmac hash.Hash, buf, buf2, hmacBuf []byte) []byte {
 	if buf2 != nil {
 		hmac.Write(buf2)
 	}
-	return hmac.Sum(hmacBuf[:])
+	return hmac.Sum(hmacBuf[:0])
 }
 
 // ApplyScaleFactor : Applies a scale factor to a given price.
