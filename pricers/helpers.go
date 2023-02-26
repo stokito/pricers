@@ -79,18 +79,10 @@ func keyBytes(key string, isBase64 bool, mode KeyDecodingMode) ([]byte, error) {
 }
 
 // HmacSum : Returns Hmac sum bytes.
-func HmacSum(hmac2 hash.Hash, buf []byte) []byte {
-	hmac2.Reset()
-	hmac2.Write(buf)
-	return hmac2.Sum(nil)
-}
-
-// HmacSum : Returns Hmac sum bytes.
-func HmacSum2(k, buf []byte) []byte {
-	h := hmac.New(sha1.New, k)
-	h.Reset()
-	h.Write(buf)
-	return h.Sum(nil)
+func HmacSum(hmac hash.Hash, buf []byte) []byte {
+	hmac.Reset()
+	hmac.Write(buf)
+	return hmac.Sum(nil)
 }
 
 // ApplyScaleFactor : Applies a scale factor to a given price.

@@ -427,7 +427,7 @@ func TestEncryptDecryptWithScaleFactor(t *testing.T) {
 
 			// Decrypt
 			decrypted, err = pricer.Decrypt(encrypted)
-			assert.Nil(t, err, "EncryDecryptionption failed. Error : %s", err)
+			assert.Nil(t, err, "Decryption failed. Error : %s", err)
 
 			// Verify:
 			// Assert that the decrypted price is the one with encrypted in a first place
