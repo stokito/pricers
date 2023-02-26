@@ -21,7 +21,7 @@ Specs https://developers.google.com/ad-exchange/rtb/response-guide/decrypt-price
 #### Examples
 ##### Creating a new Google Private Data Pricer
 ```golang
-import "github.com/benjaminch/pricers/doubleclick"
+import "github.com/benjaminch/pricers"
 
 var pricer *doubleclick.DoubleClickPricer
 var err error
@@ -35,7 +35,7 @@ pricer, err = doubleclick.NewDoubleClickPricer(
 ```
 ##### Encrypting a clear price
 ```go
-import "github.com/benjaminch/pricers/doubleclick"
+import "github.com/benjaminch/pricers"
 
 var result string
 var err error
@@ -48,7 +48,7 @@ if err != nil {
 ```
 ##### Decrypting an encrypted price
 ```go
-import "github.com/benjaminch/pricers/doubleclick"
+import "github.com/benjaminch/pricers"
 
 var result float64
 var err error

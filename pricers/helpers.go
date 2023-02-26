@@ -1,4 +1,4 @@
-package doubleclick
+package pricers
 
 import (
 	"crypto/hmac"

@@ -1,4 +1,4 @@
-package doubleclick
+package pricers
 
 import (
 	"bytes"
