@@ -53,7 +53,7 @@ func CreateHmac(keyRaw []byte) hash.Hash {
 	return hmac.New(sha1.New, keyRaw)
 }
 
-func keyBytes(key string, isBase64 bool, mode KeyDecodingMode) ([]byte, error) {
+func RawKeyBytes(key string, isBase64 bool, mode KeyDecodingMode) ([]byte, error) {
 	var err error
 	var b64DecodedKey []byte
 	var k []byte

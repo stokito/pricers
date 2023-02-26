@@ -38,11 +38,11 @@ func NewDoubleClickPricer(
 	scaleFactor float64) (*DoubleClickPricer, error) {
 	var err error
 
-	encryptionKeyRaw, err := keyBytes(encryptionKey, isBase64Keys, keyDecodingMode)
+	encryptionKeyRaw, err := RawKeyBytes(encryptionKey, isBase64Keys, keyDecodingMode)
 	if err != nil {
 		return nil, err
 	}
-	integrityKeyRaw, err := keyBytes(integrityKey, isBase64Keys, keyDecodingMode)
+	integrityKeyRaw, err := RawKeyBytes(integrityKey, isBase64Keys, keyDecodingMode)
 	if err != nil {
 		return nil, err
 	}

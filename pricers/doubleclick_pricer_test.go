@@ -7,6 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var encryptionKeyRaw, _ = RawKeyBytes("652f83ada0545157a1b7fb0c0e09f59e7337332fe7abd4eb10449b8ee6c39135", false, Hexa)
+var integrityKeyRaw, _ = RawKeyBytes("bd0a3dfb82ad95c5e63e159a62f73c6aca98ba2495322194759d512d77eb2bb5", false, Hexa)
+
 // Create a pricer with:
 // - HEX keys
 // - Price scale factor as micro
@@ -15,10 +18,7 @@ func buildPricer() *DoubleClickPricer {
 }
 
 func buildPricerWithScale(scaleFactor float64) *DoubleClickPricer {
-	var pricer *DoubleClickPricer
-	encryptionKeyRaw, _ := keyBytes("652f83ada0545157a1b7fb0c0e09f59e7337332fe7abd4eb10449b8ee6c39135", false, Hexa)
-	integrityKeyRaw, _ := keyBytes("bd0a3dfb82ad95c5e63e159a62f73c6aca98ba2495322194759d512d77eb2bb5", false, Hexa)
-	pricer, _ = NewDoubleClickPricerFromRawKeys(encryptionKeyRaw, integrityKeyRaw, scaleFactor)
+	pricer, _ := NewDoubleClickPricerFromRawKeys(encryptionKeyRaw, integrityKeyRaw, scaleFactor)
 	return pricer
 }
 
