@@ -90,7 +90,7 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 		signature []byte
 	)
 
-	data := helpers.ApplyScaleFactor(price, dc.scaleFactor, dc.isDebugMode)
+	data := helpers.ApplyScaleFactor(price, dc.scaleFactor)
 
 	// Create Initialization Vector from seed
 	iv = md5.Sum([]byte(seed))
