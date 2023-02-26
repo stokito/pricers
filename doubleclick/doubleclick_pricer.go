@@ -38,8 +38,7 @@ func NewDoubleClickPricer(
 	integrityKey string,
 	isBase64Keys bool,
 	keyDecodingMode helpers.KeyDecodingMode,
-	scaleFactor float64,
-	isDebugMode bool) (*DoubleClickPricer, error) {
+	scaleFactor float64) (*DoubleClickPricer, error) {
 	var err error
 	var encryptingFun, integrityFun hash.Hash
 
@@ -122,7 +121,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	signature := binary.BigEndian.Uint32(decoded[24:28])
 
 	// pad = hmac(e_key, iv)
-	pad := helpers.HmacSum(dc.encryptionKey, iv)[:8]
+	//pad := helpers.HmacSum(dc.encryptionKey, iv)[:8]
 	pad := binary.BigEndian.Uint64(helpers.HmacSum(dc.encryptionKey, iv, nil)[:8])
 
 	// priceMicro = p <xor> pad
