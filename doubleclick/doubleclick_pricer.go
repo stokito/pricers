@@ -5,9 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
-	"fmt"
 	"hash"
 
 	"github.com/benjaminch/pricers/helpers"
@@ -25,11 +23,10 @@ type DoubleClickPricer struct {
 	integrityKey     hash.Hash
 	keyDecodingMode  helpers.KeyDecodingMode
 	scaleFactor      float64
-	isDebugMode      bool
 }
 
 // NewDoubleClickPricer returns a DoubleClickPricer struct.
-// Keys are either base 64 websafe of hexa. keyDecodingMode
+// Keys are either Base64Url (websafe) of hexa. keyDecodingMode
 // should be used to specify how keys should be decoded.
 // Factor the clear price will be multiplied by before encryption.
 // from specs, scaleFactor is 1,000,000, but you can set something else.
@@ -55,30 +52,13 @@ func NewDoubleClickPricer(
 		return nil, err
 	}
 
-	if isDebugMode {
-		fmt.Println("Keys decoding mode : ", keyDecodingMode)
-		fmt.Println("Encryption key : ", encryptionKey)
-		encryptionKeyHexa, err := hex.DecodeString(encryptionKey)
-		if err != nil {
-			encryptionKeyHexa = []byte(encryptionKey)
-		}
-		fmt.Println("Encryption key (bytes) : ", []byte(encryptionKeyHexa))
-		fmt.Println("Integrity key : ", integrityKey)
-		integrityKeyHexa, err := hex.DecodeString(integrityKey)
-		if err != nil {
-			integrityKeyHexa = []byte(integrityKey)
-		}
-		fmt.Println("Integrity key (bytes) : ", []byte(integrityKeyHexa))
-	}
-
 	return &DoubleClickPricer{
 			encryptionKeyRaw: encryptionKey,
 			integrityKeyRaw:  integrityKey,
 			encryptionKey:    encryptingFun,
 			integrityKey:     integrityFun,
 			keyDecodingMode:  keyDecodingMode,
-			scaleFactor:      scaleFactor,
-			isDebugMode:      isDebugMode},
+			scaleFactor:      scaleFactor},
 		nil
 }
 
