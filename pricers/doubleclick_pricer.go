@@ -19,7 +19,6 @@ type DoubleClickPricer struct {
 	integrityKeyRaw  []byte
 	encryptionKey    hash.Hash
 	integrityKey     hash.Hash
-	keyDecodingMode  KeyDecodingMode
 	scaleFactor      float64
 }
 
@@ -38,16 +37,6 @@ func NewDoubleClickPricer(
 	keyDecodingMode KeyDecodingMode,
 	scaleFactor float64) (*DoubleClickPricer, error) {
 	var err error
-	var encryptingFun, integrityFun hash.Hash
-
-	encryptingFun, err = CreateHmac(encryptionKey, isBase64Keys, keyDecodingMode)
-	if err != nil {
-		return nil, err
-	}
-	integrityFun, err = CreateHmac(integrityKey, isBase64Keys, keyDecodingMode)
-	if err != nil {
-		return nil, err
-	}
 
 	encryptionKeyRaw, err := keyBytes(encryptionKey, isBase64Keys, keyDecodingMode)
 	if err != nil {
@@ -58,13 +47,26 @@ func NewDoubleClickPricer(
 		return nil, err
 	}
 
+	encryptingFun := CreateHmac(encryptionKeyRaw)
+	integrityFun := CreateHmac(integrityKeyRaw)
+
 	return &DoubleClickPricer{
-			encryptionKeyRaw: encryptionKeyRaw,
-			integrityKeyRaw:  integrityKeyRaw,
-			encryptionKey:    encryptingFun,
-			integrityKey:     integrityFun,
-			keyDecodingMode:  keyDecodingMode,
-			scaleFactor:      scaleFactor},
+			encryptionKey: encryptingFun,
+			integrityKey:  integrityFun,
+			scaleFactor:   scaleFactor},
+		nil
+}
+
+func NewDoubleClickPricerFromRawKeys(
+	encryptionKeyRaw []byte,
+	integrityKeyRaw []byte,
+	scaleFactor float64) (*DoubleClickPricer, error) {
+	encryptingFun := CreateHmac(encryptionKeyRaw)
+	integrityFun := CreateHmac(integrityKeyRaw)
+	return &DoubleClickPricer{
+			encryptionKey: encryptingFun,
+			integrityKey:  integrityFun,
+			scaleFactor:   scaleFactor},
 		nil
 }
 
@@ -75,6 +77,12 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 		encoded   [8]byte
 		signature []byte
 	)
+
+	// ApplyScaleFactor : Applies a scale factor to a given price.
+	// Scaled price will be represented on 8 bytes.
+	//scaledPrice := uint64(price * dc.scaleFactor)
+	//data := [8]byte{}
+	//binary.BigEndian.PutUint64(data[:], scaledPrice)
 
 	data := ApplyScaleFactor(price, dc.scaleFactor)
 
