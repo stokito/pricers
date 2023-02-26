@@ -107,8 +107,8 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 // Decrypt decrypts an encrypted price.
 func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 	buf := make([]byte, 56)
-	priceInMicro, err := dc.DecryptRaw([]byte(encryptedPrice), buf)
-	price := float64(priceInMicro) / dc.scaleFactor
+	priceInMicros, err := dc.DecryptRaw([]byte(encryptedPrice), buf)
+	price := float64(priceInMicros) / dc.scaleFactor
 	return price, err
 }
 
@@ -116,7 +116,9 @@ func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 // It returns the price as integer in micros without applying a scaleFactor
 // You must pass a buffer for decoder so that can reused again to avoid allocation
 func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint64, error) {
-	var err error
+	// first 28 bytes of buf are used to decode price, second 28 for a hmac sum buffer
+	decoded := buf[:28]
+	hmacBuf := buf[28:]
 
 	// Decode base64 url
 	// Just to be safe remove padding if it was added by mistake
@@ -124,12 +126,10 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	if len(encryptedPrice) != 38 {
 		return 0, ErrWrongSize
 	}
-	_, err = base64.RawURLEncoding.Decode(buf, encryptedPrice)
+	_, err := base64.RawURLEncoding.Decode(decoded, encryptedPrice)
 	if err != nil {
 		return 0, err
 	}
-	decoded := buf[:28]
-	hmacBuf := buf[28:]
 
 	// Get elements
 	iv := decoded[0:16]
@@ -138,7 +138,6 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 
 	// pad = hmac(e_key, iv)
 	pad := binary.BigEndian.Uint64(HmacSum(dc.encryptionKey, iv, nil, hmacBuf)[:8])
-	//pad := binary.BigEndian.Uint64(HmacSum2(dc.encryptionKeyRaw, iv)[:8])
 
 	// priceMicro = p <xor> pad
 	priceInMicros := pad ^ p
@@ -146,8 +145,6 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	binary.BigEndian.PutUint64(priceMicro[:], priceInMicros)
 
 	// conf_sig = hmac(i_key, data || iv)
-	//confirmationSignature := binary.BigEndian.Uint32(HmacSum2(dc.integrityKeyRaw, append(priceMicro[:], iv[:]...))[:4])
-	//confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv)[:4])
 	confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv, hmacBuf)[:4])
 
 	// success = (conf_sig == sig)
