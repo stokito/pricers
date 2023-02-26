@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/benjaminch/pricers/helpers"
 )
 
 // Create a pricer with:
@@ -23,7 +21,7 @@ func buildPricerWithScale(scaleFactor float64) (*DoubleClickPricer, error) {
 		"652f83ada0545157a1b7fb0c0e09f59e7337332fe7abd4eb10449b8ee6c39135",
 		"bd0a3dfb82ad95c5e63e159a62f73c6aca98ba2495322194759d512d77eb2bb5",
 		false,
-		helpers.Hexa,
+		Hexa,
 		scaleFactor)
 	return pricer, err
 }
@@ -59,7 +57,7 @@ func TestDecryptGoogleOfficialExamples(t *testing.T) {
 		"ZS-DraBUUVeht_sMDgn1nnM3My_nq9TrEESbjubDkTU",
 		"vQo9-4KtlcXmPhWaYvc8asqYuiSVMiGUdZ1RLXfrK7U",
 		true,
-		helpers.Utf8,
+		Utf8,
 		1000000)
 
 	assert.Nil(t, err, "Error creating new Pricer : ", err)
@@ -124,7 +122,7 @@ func TestDecryptWithUtf8Keys(t *testing.T) {
 		"6356770B3C111C07F778AFD69F16643E9110090FD4C479D91181EED2523788F1",
 		"3588BF6D387E8AEAD4EEC66798255369AF47BFD48B056E8934CEFEF3609C469E",
 		false,
-		helpers.Utf8,
+		Utf8,
 		1000000)
 
 	assert.Nil(t, err, "Error creating new Pricer : ", err)
@@ -315,7 +313,7 @@ func TestEncryptDecryptWithUtf8Keys(t *testing.T) {
 		"6356770B3C111C07F778AFD69F16643E9110090FD4C479D91181EED2523788F1",
 		"3588BF6D387E8AEAD4EEC66798255369AF47BFD48B056E8934CEFEF3609C469E",
 		false,
-		helpers.Utf8,
+		Utf8,
 		1000000)
 
 	assert.Nil(t, err, "Error creating new Pricer : ", err)

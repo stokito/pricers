@@ -7,8 +7,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"hash"
-
-	"github.com/benjaminch/pricers/helpers"
 )
 
 var ErrWrongSize = errors.New("Encrypted price is not 38 chars")
@@ -17,11 +15,11 @@ var ErrWrongSignature = errors.New("Failed to decrypt")
 // DoubleClickPricer implementing price encryption and decryption
 // Specs : https://developers.google.com/ad-exchange/rtb/response-guide/decrypt-price
 type DoubleClickPricer struct {
-	encryptionKeyRaw string
-	integrityKeyRaw  string
+	encryptionKeyRaw []byte
+	integrityKeyRaw  []byte
 	encryptionKey    hash.Hash
 	integrityKey     hash.Hash
-	keyDecodingMode  helpers.KeyDecodingMode
+	keyDecodingMode  KeyDecodingMode
 	scaleFactor      float64
 }
 
@@ -37,23 +35,32 @@ func NewDoubleClickPricer(
 	encryptionKey string,
 	integrityKey string,
 	isBase64Keys bool,
-	keyDecodingMode helpers.KeyDecodingMode,
+	keyDecodingMode KeyDecodingMode,
 	scaleFactor float64) (*DoubleClickPricer, error) {
 	var err error
 	var encryptingFun, integrityFun hash.Hash
 
-	encryptingFun, err = helpers.CreateHmac(encryptionKey, isBase64Keys, keyDecodingMode)
+	encryptingFun, err = CreateHmac(encryptionKey, isBase64Keys, keyDecodingMode)
 	if err != nil {
 		return nil, err
 	}
-	integrityFun, err = helpers.CreateHmac(integrityKey, isBase64Keys, keyDecodingMode)
+	integrityFun, err = CreateHmac(integrityKey, isBase64Keys, keyDecodingMode)
+	if err != nil {
+		return nil, err
+	}
+
+	encryptionKeyRaw, err := keyBytes(encryptionKey, isBase64Keys, keyDecodingMode)
+	if err != nil {
+		return nil, err
+	}
+	integrityKeyRaw, err := keyBytes(integrityKey, isBase64Keys, keyDecodingMode)
 	if err != nil {
 		return nil, err
 	}
 
 	return &DoubleClickPricer{
-			encryptionKeyRaw: encryptionKey,
-			integrityKeyRaw:  integrityKey,
+			encryptionKeyRaw: encryptionKeyRaw,
+			integrityKeyRaw:  integrityKeyRaw,
 			encryptionKey:    encryptingFun,
 			integrityKey:     integrityFun,
 			keyDecodingMode:  keyDecodingMode,
@@ -69,16 +76,16 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 		signature []byte
 	)
 
-	data := helpers.ApplyScaleFactor(price, dc.scaleFactor)
+	data := ApplyScaleFactor(price, dc.scaleFactor)
 
 	// Create Initialization Vector from seed
 	iv = md5.Sum([]byte(seed))
 
 	//pad = hmac(e_key, iv), first 8 bytes
-	pad := helpers.HmacSum(dc.encryptionKey, iv[:])[:8]
+	pad := HmacSum(dc.encryptionKey, iv[:])[:8]
 
 	// signature = hmac(i_key, data || iv), first 4 bytes
-	signature = helpers.HmacSum(dc.integrityKey, append(data[:], iv[:]...))[:4]
+	signature = HmacSum(dc.integrityKey, append(data[:], iv[:]...))[:4]
 
 	// enc_data = pad <xor> data
 	for i := range data {
@@ -122,7 +129,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 
 	// pad = hmac(e_key, iv)
 	//pad := helpers.HmacSum(dc.encryptionKey, iv)[:8]
-	pad := binary.BigEndian.Uint64(helpers.HmacSum(dc.encryptionKey, iv)[:8])
+	pad := binary.BigEndian.Uint64(HmacSum(dc.encryptionKey, iv)[:8])
 
 	// priceMicro = p <xor> pad
 	priceInMicros := pad ^ p
@@ -130,7 +137,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	binary.BigEndian.PutUint64(priceMicro[:], priceInMicros)
 
 	// conf_sig = hmac(i_key, data || iv)
-	confirmationSignature := binary.BigEndian.Uint32(helpers.HmacSum(dc.integrityKey, append(priceMicro[:], iv[:]...))[:4])
+	confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, append(priceMicro[:], iv[:]...))[:4])
 	//confirmationSignature := binary.BigEndian.Uint32(helpers.HmacSum(dc.integrityKey, priceMicro[:], iv)[:4])
 
 	// success = (conf_sig == sig)

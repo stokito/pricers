@@ -1,4 +1,4 @@
-package helpers
+package doubleclick
 
 import (
 	"crypto/hmac"
@@ -51,6 +51,14 @@ func ParseKeyDecodingMode(input string) (KeyDecodingMode, error) {
 
 // CreateHmac : Returns Hash from input string.
 func CreateHmac(key string, isBase64 bool, mode KeyDecodingMode) (hash.Hash, error) {
+	k, err := keyBytes(key, isBase64, mode)
+	if err != nil {
+		return nil, err
+	}
+	return hmac.New(sha1.New, k), nil
+}
+
+func keyBytes(key string, isBase64 bool, mode KeyDecodingMode) ([]byte, error) {
 	var err error
 	var b64DecodedKey []byte
 	var k []byte
@@ -72,12 +80,18 @@ func CreateHmac(key string, isBase64 bool, mode KeyDecodingMode) (hash.Hash, err
 	if err != nil {
 		return nil, err
 	}
-
-	return hmac.New(sha1.New, k), nil
+	return k, nil
 }
 
 // HmacSum : Returns Hmac sum bytes.
 func HmacSum(hmac hash.Hash, buf []byte) []byte {
+	hmac.Reset()
+	hmac.Write(buf)
+	return hmac.Sum(nil)
+}
+
+// HmacSum : Returns Hmac sum bytes.
+func HmacSum2(hmac hash.Hash, buf []byte) []byte {
 	hmac.Reset()
 	hmac.Write(buf)
 	return hmac.Sum(nil)
