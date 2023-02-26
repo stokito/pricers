@@ -79,9 +79,12 @@ func RawKeyBytes(key string, isBase64 bool, mode KeyDecodingMode) ([]byte, error
 }
 
 // HmacSum : Returns Hmac sum bytes.
-func HmacSum(hmac hash.Hash, buf []byte) []byte {
+func HmacSum(hmac hash.Hash, buf, buf2 []byte) []byte {
 	hmac.Reset()
 	hmac.Write(buf)
+	if buf2 != nil {
+		hmac.Write(buf2)
+	}
 	return hmac.Sum(nil)
 }
 

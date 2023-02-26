@@ -90,10 +90,10 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 	iv = md5.Sum([]byte(seed))
 
 	//pad = hmac(e_key, iv), first 8 bytes
-	pad := HmacSum(dc.encryptionKey, iv[:])[:8]
+	pad := HmacSum(dc.encryptionKey, iv[:], nil)[:8]
 
 	// signature = hmac(i_key, data || iv), first 4 bytes
-	signature = HmacSum(dc.integrityKey, append(data[:], iv[:]...))[:4]
+	signature = HmacSum(dc.integrityKey, data[:], iv[:])[:4]
 
 	// enc_data = pad <xor> data
 	for i := range data {
@@ -136,7 +136,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	signature := binary.BigEndian.Uint32(decoded[24:28])
 
 	// pad = hmac(e_key, iv)
-	pad := binary.BigEndian.Uint64(HmacSum(dc.encryptionKey, iv)[:8])
+	pad := binary.BigEndian.Uint64(HmacSum(dc.encryptionKey, iv, nil)[:8])
 	//pad := binary.BigEndian.Uint64(HmacSum2(dc.encryptionKeyRaw, iv)[:8])
 
 	// priceMicro = p <xor> pad
@@ -147,7 +147,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	// conf_sig = hmac(i_key, data || iv)
 	//confirmationSignature := binary.BigEndian.Uint32(HmacSum2(dc.integrityKeyRaw, append(priceMicro[:], iv[:]...))[:4])
 	//confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv)[:4])
-	confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, append(priceMicro[:], iv[:]...))[:4])
+	confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv)[:4])
 
 	// success = (conf_sig == sig)
 	if confirmationSignature != signature {
