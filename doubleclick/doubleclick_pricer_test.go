@@ -24,8 +24,7 @@ func buildPricerWithScale(scaleFactor float64) (*DoubleClickPricer, error) {
 		"bd0a3dfb82ad95c5e63e159a62f73c6aca98ba2495322194759d512d77eb2bb5",
 		false,
 		helpers.Hexa,
-		scaleFactor,
-		false)
+		scaleFactor)
 	return pricer, err
 }
 
@@ -474,6 +473,8 @@ func BenchmarkDecrypt(b *testing.B) {
 		_, _ = pricer.Decrypt(encryptedPrice)
 	}
 }
+
+//1511 1858
 
 func TestDoubleClickPricer_DecryptRaw(t *testing.T) {
 	pricer, _ := buildPricer()
