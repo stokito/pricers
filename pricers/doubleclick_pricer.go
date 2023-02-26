@@ -90,10 +90,10 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 	iv = md5.Sum([]byte(seed))
 
 	//pad = hmac(e_key, iv), first 8 bytes
-	pad := HmacSum(dc.encryptionKey, iv[:], nil)[:8]
+	pad := HmacSum(dc.encryptionKey, iv[:], nil, nil)[:8]
 
 	// signature = hmac(i_key, data || iv), first 4 bytes
-	signature = HmacSum(dc.integrityKey, data[:], iv[:])[:4]
+	signature = HmacSum(dc.integrityKey, data[:], iv[:], nil)[:4]
 
 	// enc_data = pad <xor> data
 	for i := range data {
@@ -107,7 +107,8 @@ func (dc *DoubleClickPricer) Encrypt(seed string, price float64) (string, error)
 // Decrypt decrypts an encrypted price.
 func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 	buf := make([]byte, 28)
-	priceInMicro, err := dc.DecryptRaw([]byte(encryptedPrice), buf)
+	hmacBuf := make([]byte, 0, 28)
+	priceInMicro, err := dc.DecryptRaw([]byte(encryptedPrice), buf, hmacBuf)
 	price := float64(priceInMicro) / dc.scaleFactor
 	return price, err
 }
@@ -115,7 +116,7 @@ func (dc *DoubleClickPricer) Decrypt(encryptedPrice string) (float64, error) {
 // DecryptRaw decrypts an encrypted price.
 // It returns the price as integer in micros without applying a scaleFactor
 // You must pass a buffer for decoder so that can reused again to avoid allocation
-func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint64, error) {
+func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf, hmacBuf []byte) (uint64, error) {
 	var err error
 
 	// Decode base64 url
@@ -136,7 +137,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	signature := binary.BigEndian.Uint32(decoded[24:28])
 
 	// pad = hmac(e_key, iv)
-	pad := binary.BigEndian.Uint64(HmacSum(dc.encryptionKey, iv, nil)[:8])
+	pad := binary.BigEndian.Uint64(HmacSum(dc.encryptionKey, iv, nil, hmacBuf)[:8])
 	//pad := binary.BigEndian.Uint64(HmacSum2(dc.encryptionKeyRaw, iv)[:8])
 
 	// priceMicro = p <xor> pad
@@ -147,7 +148,7 @@ func (dc *DoubleClickPricer) DecryptRaw(encryptedPrice []byte, buf []byte) (uint
 	// conf_sig = hmac(i_key, data || iv)
 	//confirmationSignature := binary.BigEndian.Uint32(HmacSum2(dc.integrityKeyRaw, append(priceMicro[:], iv[:]...))[:4])
 	//confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv)[:4])
-	confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv)[:4])
+	confirmationSignature := binary.BigEndian.Uint32(HmacSum(dc.integrityKey, priceMicro[:], iv, hmacBuf)[:4])
 
 	// success = (conf_sig == sig)
 	if confirmationSignature != signature {
